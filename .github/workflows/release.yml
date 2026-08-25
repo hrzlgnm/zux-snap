@@ -35,7 +35,7 @@ jobs:
         shell: bash
 
       - name: Build snap
-        run: sudo snapcraft --use-lxd --verbosity=brief
+        run: sudo snapcraft pack --use-lxd --verbosity=brief
         shell: bash
 
       - name: Upload snap artifact
