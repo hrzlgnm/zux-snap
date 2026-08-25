@@ -1,0 +1,101 @@
+# Copyright 2026 hrzlgnm
+# SPDX-License-Identifier: MIT-0
+
+name: Release snap
+
+on:
+  workflow_dispatch:
+    inputs:
+      tagName:
+        description: Upstream release tag to package, e.g. v1.7.1
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: 🔨 Build snap
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Pin snap source to upstream release
+        uses: ./.github/actions/pin-upstream-tag
+        with:
+          tag: ${{ inputs.tagName }}
+
+      - name: Setup LXD
+        uses: canonical/setup-lxd@8c6a87bfb56aa48f3fb9b830baa18562d8bfd4ee # v1
+
+      - name: Install snapcraft
+        run: sudo snap install snapcraft --classic
+        shell: bash
+
+      - name: Build snap
+        run: sudo snapcraft --use-lxd --verbosity=brief
+        shell: bash
+
+      - name: Upload snap artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: zux-amd64
+          path: "*.snap"
+          if-no-files-found: error
+
+  smoke-test:
+    name: 🧪 Smoke test snap
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - name: Setup LXD
+        uses: canonical/setup-lxd@8c6a87bfb56aa48f3fb9b830baa18562d8bfd4ee # v1
+
+      - name: Download snap artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: zux-amd64
+
+      - name: Install and launch check in container
+        run: |
+          set -euo pipefail
+          sudo lxc launch ubuntu:24.04 smoke-test
+          sudo lxc exec smoke-test -- cloud-init status --wait
+          sudo lxc file push ./*.snap smoke-test/root/zux.snap
+          sudo lxc exec smoke-test -- snap install --dangerous /root/zux.snap
+          sudo lxc exec smoke-test -- zux --help | grep -i usage
+          sudo lxc delete --force smoke-test
+        shell: bash
+
+  publish:
+    name: 🚀 Publish to Snap Store (stable)
+    runs-on: ubuntu-latest
+    needs:
+      - smoke-test
+    env:
+      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+    steps:
+      - name: Check store credentials
+        if: env.SNAPCRAFT_STORE_CREDENTIALS == ''
+        run: |
+          echo "SNAPCRAFT_STORE_CREDENTIALS is not configured; skipping publish." >> "$GITHUB_STEP_SUMMARY"
+        shell: bash
+
+      - name: Install snapcraft
+        if: env.SNAPCRAFT_STORE_CREDENTIALS != ''
+        run: sudo snap install snapcraft --classic
+        shell: bash
+
+      - name: Download snap artifact
+        if: env.SNAPCRAFT_STORE_CREDENTIALS != ''
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: zux-amd64
+
+      - name: Upload to stable channel
+        if: env.SNAPCRAFT_STORE_CREDENTIALS != ''
+        run: snapcraft upload ./*.snap --release=stable
+        shell: bash

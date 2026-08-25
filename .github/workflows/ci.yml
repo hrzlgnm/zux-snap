@@ -1,0 +1,52 @@
+# Copyright 2026 hrzlgnm
+# SPDX-License-Identifier: MIT-0
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  typos:
+    name: 📝 Check typos
+    if: always()
+    uses: hrzlgnm/actions/.github/workflows/typos-reusable.yml@1847f299d36e715acd93d4bc496b9faab29a4c94 # v2.6.0
+
+  actionlint:
+    if: always()
+    uses: hrzlgnm/actions/.github/workflows/actionlint-reusable.yml@1847f299d36e715acd93d4bc496b9faab29a4c94 # v2.6.0
+
+  build:
+    name: 🔨 Build snap
+    runs-on: ubuntu-latest
+    needs:
+      - actionlint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Pin snap source to latest upstream release
+        uses: ./.github/actions/pin-upstream-tag
+
+      - name: Setup LXD
+        uses: canonical/setup-lxd@8c6a87bfb56aa48f3fb9b830baa18562d8bfd4ee # v1
+
+      - name: Install snapcraft
+        run: sudo snap install snapcraft --classic
+        shell: bash
+
+      - name: Build snap
+        run: sudo snapcraft --use-lxd --verbosity=brief
+        shell: bash
+
+      - name: Upload snap artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: zux-amd64
+          path: "*.snap"
+          if-no-files-found: error

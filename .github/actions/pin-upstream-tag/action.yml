@@ -1,0 +1,29 @@
+# Copyright 2026 hrzlgnm
+# SPDX-License-Identifier: MIT-0
+
+name: Pin upstream tag
+description: Rewrites snap/snapcraft.yaml to package a specific hrzlgnm/zux tag
+inputs:
+  tag:
+    description: Upstream tag to pin, e.g. v1.7.1. Defaults to the latest upstream release.
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        INPUT_TAG: ${{ inputs.tag }}
+        UPSTREAM_REPO: hrzlgnm/zux
+      run: |
+        set -euo pipefail
+        if [ -z "$INPUT_TAG" ]; then
+            TAG="$(gh api "repos/$UPSTREAM_REPO/releases/latest" --jq .tag_name)"
+        else
+            TAG="$INPUT_TAG"
+        fi
+        gh api "repos/$UPSTREAM_REPO/git/ref/tags/$TAG" --jq .object.sha > /dev/null
+        sed -i "s|^    source-tag: .*|    source-tag: $TAG|" snap/snapcraft.yaml
+        echo "Pinned snap source to $TAG:"
+        grep '^    source-tag:' snap/snapcraft.yaml
