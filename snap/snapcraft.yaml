@@ -27,13 +27,6 @@ apps:
 parts:
   zux:
     plugin: nil
-    # The workflow "Build snap" step substitutes the real GitHub token as a
-    # literal into this GH_TOKEN build-environment placeholder before running
-    # snapcraft. Snapcraft writes build-environment values verbatim into the
-    # LXD build container's environment, and gh needs an authenticated token
-    # (it is not available anonymously inside the container).
-    build-environment:
-      - GH_TOKEN: ${GH_TOKEN}
     source: https://github.com/hrzlgnm/zux.git
     # CI rewrites this line to the release tag being packaged.
     source-tag: v1.7.1
@@ -57,12 +50,15 @@ parts:
       url="https://github.com/hrzlgnm/zux/releases/download/${tag}/${asset}"
       curl -fsSL -o zux "$url"
 
-      # Verify the binary's SLSA build provenance. This proves the artifact
-      # was produced by the upstream release workflow from the tagged source
-      # commit, not merely that it matches the digest GitHub lists for the
-      # release asset (which a compromised publish step could rewrite).
-      # gh reaches GitHub anonymously for public repos, so no GH_TOKEN is
-      # needed inside the --use-lxd build container.
+      # Verify the binary's SLSA build provenance offline. The attestation
+      # bundle and Sigstore trusted root are fetched on the runner (which has
+      # a token) and mounted into this LXD build container via the project
+      # directory. gh attestation verify --bundle --custom-trusted-root runs
+      # fully offline (no auth, no network), so no GH_TOKEN is needed here.
+      # This proves the artifact was produced by the upstream release workflow
+      # from the tagged source commit, not merely that it matches the digest
+      # GitHub lists for the release asset (which a compromised publish step
+      # could rewrite).
       # core24's apt `gh` (2.45) predates the `attestation` subcommand, so
       # fetch a static CLI build and pin its checksum.
       gh_ver=2.98.0
@@ -75,10 +71,12 @@ parts:
       tar -xzf "$gh_tarball"
       gh_bin="$(pwd)/gh_${gh_ver}_linux_amd64/bin/gh"
 
+      bundle="$(ls "$SNAPCRAFT_PROJECT_DIR"/sha256*.jsonl | head -1)"
       "$gh_bin" attestation verify zux \
         --repo hrzlgnm/zux \
-        --cert-identity "https://github.com/hrzlgnm/zux/.github/workflows/release.yml@refs/tags/${tag}" \
-        --source-digest "$(git rev-parse HEAD)"
+        --bundle "$bundle" \
+        --custom-trusted-root "$SNAPCRAFT_PROJECT_DIR/trusted_root.jsonl" \
+        --cert-identity "https://github.com/hrzlgnm/zux/.github/workflows/release.yml@refs/tags/${tag}"
 
       install -Dm755 zux "$CRAFT_PART_INSTALL/bin/zux"
 
