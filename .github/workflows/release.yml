@@ -35,7 +35,7 @@ jobs:
         shell: bash
 
       - name: Build snap
-        uses: hrzlgnm/actions/.github/actions/build-snap@v2.7.0
+        uses: hrzlgnm/actions/.github/actions/build-snap@0e4d5e0e4a8f1f241811ea34ff346fa59e66a1b0 # v2.7.1
         with:
           verbosity: brief
 
