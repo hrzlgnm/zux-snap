@@ -46,13 +46,32 @@ parts:
       # unbundled Linux binary. Running outside a Tauri bundle layout
       # keeps upstream's auto-updater self-disabled; snap refresh owns
       # updates instead.
-      # The binary's SLSA build provenance is verified on the runner
-      # (see the "Verify upstream binary provenance" workflow step), where
-      # the GitHub token is natively available; the build here only
-      # downloads and installs the same asset.
       asset="zux_linux_x64"
       url="https://github.com/hrzlgnm/zux/releases/download/${tag}/${asset}"
       curl -fsSL -o zux "$url"
+
+      # Verify the binary's SLSA build provenance. This proves the artifact
+      # was produced by the upstream release workflow from the tagged source
+      # commit, not merely that it matches the digest GitHub lists for the
+      # release asset (which a compromised publish step could rewrite).
+      # gh reaches GitHub anonymously for public repos, so no GH_TOKEN is
+      # needed inside the --use-lxd build container.
+      # core24's apt `gh` (2.45) predates the `attestation` subcommand, so
+      # fetch a static CLI build and pin its checksum.
+      gh_ver=2.98.0
+      gh_tarball="gh_${gh_ver}_linux_amd64.tar.gz"
+      curl -fsSL -o "$gh_tarball" \
+        "https://github.com/cli/cli/releases/download/v${gh_ver}/${gh_tarball}"
+      printf '%s  %s\n' \
+        "3b8ac6b30336802fc1a858d7c084e11cdf24ac1a761ca90b68022d7d729208de" \
+        "$gh_tarball" | sha256sum --check --status
+      tar -xzf "$gh_tarball"
+      gh_bin="$(pwd)/gh_${gh_ver}_linux_amd64/bin/gh"
+
+      "$gh_bin" attestation verify zux \
+        --repo hrzlgnm/zux \
+        --cert-identity "https://github.com/hrzlgnm/zux/.github/workflows/release.yml@refs/tags/${tag}" \
+        --source-digest "$(git rev-parse HEAD)"
 
       install -Dm755 zux "$CRAFT_PART_INSTALL/bin/zux"
 

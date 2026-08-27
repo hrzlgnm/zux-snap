@@ -34,29 +34,6 @@ jobs:
         run: sudo snap install snapcraft --classic
         shell: bash
 
-      # Verify the upstream binary's SLSA build provenance on the runner,
-      # where the GitHub token is natively available (snapcraft's --use-lxd
-      # container does not forward host env, and gh needs a token even for
-      # public repos). This gates the build before the snap is packed; the
-      # build step then just downloads and installs the same asset.
-      - name: Verify upstream binary provenance
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          tag="$(grep -oE 'source-tag: \K.*' snap/snapcraft.yaml | tr -d '"')"
-          asset="zux_linux_x64"
-          url="https://github.com/hrzlgnm/zux/releases/download/${tag}/${asset}"
-          curl -fsSL -o /tmp/zux "$url"
-          rm -rf /tmp/zux-upstream
-          git clone --depth 1 --branch "$tag" https://github.com/hrzlgnm/zux.git /tmp/zux-upstream
-          digest="$(git -C /tmp/zux-upstream rev-parse HEAD)"
-          gh attestation verify /tmp/zux \
-            --repo hrzlgnm/zux \
-            --cert-identity "https://github.com/hrzlgnm/zux/.github/workflows/release.yml@refs/tags/${tag}" \
-            --source-digest "$digest"
-        shell: bash
-
       - name: Build snap
         uses: hrzlgnm/actions/.github/actions/build-snap@v2.7.0
         with:
