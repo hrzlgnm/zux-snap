@@ -27,6 +27,13 @@ apps:
 parts:
   zux:
     plugin: nil
+    # The workflow "Build snap" step substitutes the real GitHub token as a
+    # literal into this GH_TOKEN build-environment placeholder before running
+    # snapcraft. Snapcraft writes build-environment values verbatim into the
+    # LXD build container's environment, and gh needs an authenticated token
+    # (it is not available anonymously inside the container).
+    build-environment:
+      - GH_TOKEN: ${GH_TOKEN}
     source: https://github.com/hrzlgnm/zux.git
     # CI rewrites this line to the release tag being packaged.
     source-tag: v1.7.1

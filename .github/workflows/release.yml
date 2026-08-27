@@ -34,6 +34,28 @@ jobs:
         run: sudo snap install snapcraft --classic
         shell: bash
 
+      # Snapcraft with --use-lxd builds inside an LXD container and does not
+      # forward the host GH_TOKEN, and it treats build-environment values as
+      # literals (a GH_TOKEN: ${GH_TOKEN} placeholder is not expanded, so the
+      # build fails with "GH_TOKEN: unbound variable"). The workflow token is
+      # available here on the runner, so substitute the real token as a literal
+      # into snapcraft.yaml's GH_TOKEN build-environment placeholder before the
+      # build runs.
+      - name: Inject GH_TOKEN into snapcraft.yaml
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import os
+          p = "snap/snapcraft.yaml"
+          s = open(p).read()
+          placeholder = "GH_TOKEN: ${GH_TOKEN}"
+          assert placeholder in s, "snapcraft.yaml must contain the 'GH_TOKEN: ${GH_TOKEN}' placeholder"
+          s = s.replace(placeholder, "GH_TOKEN: " + os.environ["GH_TOKEN"])
+          open(p, "w").write(s)
+          PY
+        shell: bash
+
       - name: Build snap
         uses: hrzlgnm/actions/.github/actions/build-snap@v2.7.0
         with:
