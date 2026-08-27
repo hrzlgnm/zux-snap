@@ -27,6 +27,12 @@ apps:
 parts:
   zux:
     plugin: nil
+    # Inject the workflow token into the LXD build environment so the
+    # gh attestation verify call (which requires a token even for public
+    # repos) can authenticate. Snapcraft does not forward host env vars
+    # into the --use-lxd container on its own.
+    build-environment:
+      - GH_TOKEN: ${GH_TOKEN}
     source: https://github.com/hrzlgnm/zux.git
     # CI rewrites this line to the release tag being packaged.
     source-tag: v1.7.1
