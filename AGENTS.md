@@ -34,24 +34,30 @@ We verify with `gh attestation verify` using the **offline bundle** flow:
   host runner (the bundle + `trusted_root.jsonl`) are visible to the build
   without any env plumbing.
 
-### Host fetch step (must exist in BOTH workflows)
+### Host fetch step (shared composite action, used in BOTH workflows)
 
-Before `snapcraft pack`, a runner step (which has `GH_TOKEN: ${{ github.token }}`)
-downloads the upstream asset, fetches the bundle + trusted root, and writes
-them into the project dir:
+Before `snapcraft pack`, the **`.github/actions/fetch-attestation`** composite
+action downloads the upstream asset, runs `gh attestation download` + `gh
+attestation trusted-root`, and writes the bundle (`sha256*.jsonl`) and
+`trusted_root.jsonl` into the project dir. It takes `repo`, `asset`, and an
+optional `tag` (if `tag` is empty it reads `source-tag` from
+`snap/snapcraft.yaml`, which `pin-upstream-tag` just set). Both `ci.yml` and
+`release.yml` call it:
 
-```bash
-tag="$(grep -oP 'source-tag: \K\S+' snap/snapcraft.yaml)"   # ci.yml has no input
-asset="zux_linux_x64"
-url="https://github.com/hrzlgnm/zux/releases/download/${tag}/${asset}"
-curl -fsSL -o /tmp/"$asset" "$url"
-gh attestation download /tmp/"$asset" -R hrzlgnm/zux
-gh attestation trusted-root > trusted_root.jsonl
+```yaml
+- name: Fetch attestation bundle
+  uses: ./.github/actions/fetch-attestation
+  with:
+    repo: hrzlgnm/zux
+    asset: zux_linux_x64
+    # release.yml also passes: tag: ${{ inputs.tagName }}
 ```
 
-This step must be present in **both** `ci.yml` and `release.yml`. Forgetting
-it in `ci.yml` makes the push build fail (no `sha256*.jsonl` /
-`trusted_root.jsonl` for the build to read).
+The action runs with `working-directory: ${{ github.workspace }}` so the
+outputs land in the project dir (which `--use-lxd` mounts into the container)
+rather than the action's own temp dir. Forgetting this step in `ci.yml` makes
+the push build fail (no `sha256*.jsonl` / `trusted_root.jsonl` for the build
+to read).
 
 ### Inside `snap/snapcraft.yaml` (override-build)
 

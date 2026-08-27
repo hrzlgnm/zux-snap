@@ -1,0 +1,43 @@
+name: Fetch attestation bundle
+description: |
+  Downloads the upstream release asset and its SLSA build-provenance
+  attestation bundle + Sigstore trusted root into the project directory, so
+  a `snapcraft --use-lxd` build can verify the binary offline (no token inside
+  the container). The bundle and trusted_root.jsonl are written under
+  $GITHUB_WORKSPACE so the LXD build (which mounts the project dir) can read
+  them.
+
+inputs:
+  repo:
+    description: owner/repo that published the attestation, e.g. hrzlgnm/zux
+    required: true
+  asset:
+    description: release asset filename to fetch the attestation for
+    required: true
+  tag:
+    description: >
+      release tag to fetch; if empty, read from snap/snapcraft.yaml's
+      source-tag (set by the pin-upstream-tag step)
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Fetch attestation bundle
+      env:
+        GH_TOKEN: ${{ github.token }}
+      working-directory: ${{ github.workspace }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        tag="${{ inputs.tag }}"
+        if [ -z "$tag" ]; then
+          tag="$(grep -oP 'source-tag: \K\S+' snap/snapcraft.yaml)"
+        fi
+        asset="${{ inputs.asset }}"
+        url="https://github.com/${{ inputs.repo }}/releases/download/${tag}/${asset}"
+        curl -fsSL -o /tmp/"$asset" "$url"
+        gh attestation download /tmp/"$asset" -R "${{ inputs.repo }}"
+        gh attestation trusted-root > trusted_root.jsonl
+        ls -la

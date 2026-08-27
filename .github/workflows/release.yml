@@ -34,24 +34,12 @@ jobs:
         run: sudo snap install snapcraft --classic
         shell: bash
 
-      # Fetch the attestation bundle + Sigstore trusted root on the runner
-      # (which has a token). These files land in the project directory, which
-      # snapcraft --use-lxd mounts into the build container, so the build can
-      # verify the upstream binary's provenance fully offline (no GH_TOKEN
-      # inside the container).
       - name: Fetch attestation bundle
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          tag="${{ inputs.tagName }}"
-          asset="zux_linux_x64"
-          url="https://github.com/hrzlgnm/zux/releases/download/${tag}/${asset}"
-          curl -fsSL -o /tmp/"$asset" "$url"
-          gh attestation download /tmp/"$asset" -R hrzlgnm/zux
-          gh attestation trusted-root > trusted_root.jsonl
-          ls -la
-        shell: bash
+        uses: ./.github/actions/fetch-attestation
+        with:
+          repo: hrzlgnm/zux
+          asset: zux_linux_x64
+          tag: ${{ inputs.tagName }}
 
       - name: Build snap
         uses: hrzlgnm/actions/.github/actions/build-snap@v2.7.0
