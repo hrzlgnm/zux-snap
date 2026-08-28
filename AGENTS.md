@@ -34,20 +34,19 @@ We verify with `gh attestation verify` using the **offline bundle** flow:
   host runner (the bundle + `trusted_root.jsonl`) are visible to the build
   without any env plumbing.
 
-### Host fetch step (shared composite action, used in BOTH workflows)
+### Host fetch step (local composite action, used in BOTH workflows)
 
-Before `snapcraft pack`, the **`fetch-attestation`** composite action downloads
-the upstream asset, runs `gh attestation download` + `gh attestation
-trusted-root`, and writes the bundle (`sha256*.jsonl`) and `trusted_root.jsonl`
-into the project dir. It takes `repo`, `asset`, and an optional `tag` (if
-`tag` is empty it reads `source-tag` from `snap/snapcraft.yaml`, which
-`pin-upstream-tag` just set). Both `ci.yml` and `release.yml` call it:
+Before `snapcraft pack`, the **`.github/actions/fetch-attestation`** composite
+action downloads the upstream asset, runs `gh attestation download` + `gh
+attestation trusted-root`, and writes the bundle (`sha256*.jsonl`) and
+`trusted_root.jsonl` into the project dir. It takes `repo`, `asset`, and an
+optional `tag` (if `tag` is empty it reads `source-tag` from
+`snap/snapcraft.yaml`, which `pin-upstream-tag` just set). Both `ci.yml` and
+`release.yml` call it:
 
-> This action now lives in the shared `hrzlgnm/actions` repo (PR #214 → then
-> tagged). This repo currently keeps a local copy at `.github/actions/fetch-attestation`;
-> once the shared action is released, flip the reference to
-> `hrzlgnm/actions/.github/actions/fetch-attestation@<tag>` and drop the local
-> copy.
+> This is a **per-repo local copy** (duplicated in each snap repo that uses
+> the offline bundle flow). It is intentionally **not** shared via
+> `hrzlgnm/actions` — each repo keeps its own copy.
 
 ```yaml
 - name: Fetch attestation bundle
