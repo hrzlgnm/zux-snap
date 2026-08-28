@@ -109,12 +109,14 @@ repackage prebuilt upstream binaries:
 
 - `mdns-tui-browser-snap` — needs the same fix (binary attestation, cert
   pinned to `build-reusable.yml`, no `--source-digest`). Straightforward.
-- `mdns-browser-snap` — **blocked** until upstream
-  `hrzlgnm/mdns-browser` PR #2536 lands and a release is tagged. The current
-  `source-tag` `v1.19.0` has no valid `.deb` attestation, and the yanked
-  `v1.19.0.1.1.1` shipped a binary attestation over the wrong file
-  (`mdns-browser-bin`, not the `.deb`). `mdns-browser-snap` uses a **source**
-  attestation, so its verify passes `--source-digest "$(git rev-parse HEAD)"`.
+- `mdns-browser-snap` — now **unblocked by progress** but still pending: upstream
+  `hrzlgnm/mdns-browser` PR #2536 (attest plain-binary provenance before bundle
+  recompile) is **merged** (2026-08-27) and `v1.20.0` is a **draft** release.
+  Once `v1.20.0` is actually released with a valid **binary** attestation over
+  `mdns-browser_linux_x64`, apply the same offline bundle flow. It still uses a
+  **source** attestation today (`--source-digest "$(git rev-parse HEAD)"`),
+  which cannot be verified with the offline binary-bundle approach, so don't
+  switch it until the released version has a binary attestation.
 
 ## Shared action
 
