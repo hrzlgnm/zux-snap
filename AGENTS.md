@@ -36,13 +36,18 @@ We verify with `gh attestation verify` using the **offline bundle** flow:
 
 ### Host fetch step (shared composite action, used in BOTH workflows)
 
-Before `snapcraft pack`, the **`.github/actions/fetch-attestation`** composite
-action downloads the upstream asset, runs `gh attestation download` + `gh
-attestation trusted-root`, and writes the bundle (`sha256*.jsonl`) and
-`trusted_root.jsonl` into the project dir. It takes `repo`, `asset`, and an
-optional `tag` (if `tag` is empty it reads `source-tag` from
-`snap/snapcraft.yaml`, which `pin-upstream-tag` just set). Both `ci.yml` and
-`release.yml` call it:
+Before `snapcraft pack`, the **`fetch-attestation`** composite action downloads
+the upstream asset, runs `gh attestation download` + `gh attestation
+trusted-root`, and writes the bundle (`sha256*.jsonl`) and `trusted_root.jsonl`
+into the project dir. It takes `repo`, `asset`, and an optional `tag` (if
+`tag` is empty it reads `source-tag` from `snap/snapcraft.yaml`, which
+`pin-upstream-tag` just set). Both `ci.yml` and `release.yml` call it:
+
+> This action now lives in the shared `hrzlgnm/actions` repo (PR #214 → then
+> tagged). This repo currently keeps a local copy at `.github/actions/fetch-attestation`;
+> once the shared action is released, flip the reference to
+> `hrzlgnm/actions/.github/actions/fetch-attestation@<tag>` and drop the local
+> copy.
 
 ```yaml
 - name: Fetch attestation bundle
@@ -52,12 +57,6 @@ optional `tag` (if `tag` is empty it reads `source-tag` from
     asset: zux_linux_x64
     # release.yml also passes: tag: ${{ inputs.tagName }}
 ```
-
-The action runs with `working-directory: ${{ github.workspace }}` so the
-outputs land in the project dir (which `--use-lxd` mounts into the container)
-rather than the action's own temp dir. Forgetting this step in `ci.yml` makes
-the push build fail (no `sha256*.jsonl` / `trusted_root.jsonl` for the build
-to read).
 
 ### Inside `snap/snapcraft.yaml` (override-build)
 
