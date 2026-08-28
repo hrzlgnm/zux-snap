@@ -4,12 +4,18 @@
 name: zux
 base: core24
 adopt-info: zux
+title: zux
 summary: mDNS-SD visualizer with force-directed graph
 description: |
   zux discovers services advertised on your local network via multicast DNS
   service discovery and renders them as an interactive force-directed graph,
   so you can see at a glance which services, instances, hosts and addresses
   are present and how they relate to one another.
+
+website: https://github.com/hrzlgnm/zux
+issues: https://github.com/hrzlgnm/zux/issues
+source-code: https://github.com/hrzlgnm/zux
+contact: https://github.com/hrzlgnm
 
 grade: stable
 confinement: strict
