@@ -101,21 +101,19 @@ bundle="$(ls "$SNAPCRAFT_PROJECT_DIR"/sha256*.jsonl | head -1)"
   test over a guess.
 - Keep the host fetch step in sync between `ci.yml` and `release.yml`.
 
-## Sibling repos (same pattern, not yet all done)
+## Sibling repos (same pattern)
 
-The same offline-bundle verification should exist in the other snap repos that
-repackage prebuilt upstream binaries:
+The same offline-bundle verification is applied across the snap repos that
+repackage prebuilt upstream binaries. Each now has its own `AGENTS.md`:
 
-- `mdns-tui-browser-snap` — needs the same fix (binary attestation, cert
-  pinned to `build-reusable.yml`, no `--source-digest`). Straightforward.
-- `mdns-browser-snap` — now **unblocked by progress** but still pending: upstream
-  `hrzlgnm/mdns-browser` PR #2536 (attest plain-binary provenance before bundle
-  recompile) is **merged** (2026-08-27) and `v1.20.0` is a **draft** release.
-  Once `v1.20.0` is actually released with a valid **binary** attestation over
-  `mdns-browser_linux_x64`, apply the same offline bundle flow. It still uses a
-  **source** attestation today (`--source-digest "$(git rev-parse HEAD)"`),
-  which cannot be verified with the offline binary-bundle approach, so don't
-  switch it until the released version has a binary attestation.
+- `mdns-tui-browser-snap` — binary attestation over a **versioned tarball**
+  asset, cert pinned to `build-reusable.yml`, no `--source-digest`. Uses
+  `pin-release-version` (emits tag+asset) because the asset name embeds the
+  version.
+- `mdns-browser-snap` — binary attestation over `mdns-browser_linux_x64`,
+  cert pinned to `desktop-reusable.yml`, no `--source-digest`. Recently
+  switched from `--source-digest`; whether the verify passes against the
+  `v1.20.0` release is still being validated (see its `AGENTS.md`).
 
 ## Shared action
 
