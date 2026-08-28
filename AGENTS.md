@@ -29,10 +29,6 @@ We verify with `gh attestation verify` using the **offline bundle** flow:
   the host, so at build time it becomes `GH_TOKEN="${GH_TOKEN}"` and fails
   under `set -u` with `GH_TOKEN: unbound variable`. This is why the offline
   bundle approach exists instead.
-- The **project directory is mounted into the LXD container** and is reachable
-  inside the build at `$SNAPCRAFT_PROJECT_DIR`. So files we generate on the
-  host runner (the bundle + `trusted_root.jsonl`) are visible to the build
-  without any env plumbing.
 
 ### Host fetch step (local composite action, used in BOTH workflows)
 
@@ -41,8 +37,10 @@ action downloads the upstream asset, runs `gh attestation download` + `gh
 attestation trusted-root`, and writes the bundle (`sha256*.jsonl`) and
 `trusted_root.jsonl` into the project dir. It takes `repo`, `asset`, and an
 optional `tag` (if `tag` is empty it reads `source-tag` from
-`snap/snapcraft.yaml`, which `pin-upstream-tag` just set). Both `ci.yml` and
-`release.yml` call it:
+`snap/snapcraft.yaml`, which `pin-upstream-tag` just set). The **project
+directory is mounted into the LXD container** (`$SNAPCRAFT_PROJECT_DIR`), so
+files we generate on the host runner are visible to the build without any env
+plumbing. Both `ci.yml` and `release.yml` call it:
 
 > This is a **per-repo local copy** (duplicated in each snap repo that uses
 > the offline bundle flow). It is intentionally **not** shared via
@@ -111,9 +109,8 @@ repackage prebuilt upstream binaries. Each now has its own `AGENTS.md`:
   `pin-release-version` (emits tag+asset) because the asset name embeds the
   version.
 - `mdns-browser-snap` — binary attestation over `mdns-browser_linux_x64`,
-  cert pinned to `desktop-reusable.yml`, no `--source-digest`. Recently
-  switched from `--source-digest`; whether the verify passes against the
-  `v1.20.0` release is still being validated (see its `AGENTS.md`).
+  cert pinned to `desktop-reusable.yml`, no `--source-digest`. Uses
+  `pin-upstream-tag`.
 
 ## Shared action
 
