@@ -15,7 +15,7 @@ the version is derived from the checked-out tag.
 Once published:
 
 ```console
-sudo snap install zux
+sudo snap install zux-viz
 ```
 
 ## Releasing
@@ -27,17 +27,17 @@ sudo snap install zux
    `tagName` set to that tag (it defaults to the latest upstream release when
    unset, as CI does).
 3. CI builds the snap in LXD, uploads it as an artifact, smoke tests it in an
-   Ubuntu 24.04 LXC container (`zux --help` must print usage), and then uploads
+   Ubuntu 24.04 LXC container (`zux-viz --help` must print usage), and then uploads
    it to the `stable` channel of the Snap Store via `snapcraft upload`.
 
 ## Store setup (one-time)
 
-- Register the name: `snapcraft register zux`
+- Register the name: `snapcraft register zux-viz`
 - Create exportable store credentials and add them as the
   `SNAPCRAFT_STORE_CREDENTIALS` repository secret:
 
   ```console
-  snapcraft export-login --snaps=zux --channels=stable login-file
+  snapcraft export-login --snaps=zux-viz --channels=stable login-file
   gh secret set SNAPCRAFT_STORE_CREDENTIALS < login-file
   rm login-file
   ```
