@@ -49,7 +49,7 @@ jobs:
       - name: Upload snap artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: zux-amd64
+          name: zux-viz-amd64
           path: "*.snap"
           if-no-files-found: error
 
@@ -65,16 +65,16 @@ jobs:
       - name: Download snap artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          name: zux-amd64
+          name: zux-viz-amd64
 
       - name: Install and launch check in container
         run: |
           set -euo pipefail
           sudo lxc launch ubuntu:24.04 smoke-test
           sudo lxc exec smoke-test -- cloud-init status --wait
-          sudo lxc file push ./*.snap smoke-test/root/zux.snap
-          sudo lxc exec smoke-test -- snap install --dangerous /root/zux.snap
-          sudo lxc exec smoke-test -- zux --help | grep -i usage
+          sudo lxc file push ./*.snap smoke-test/root/zux-viz.snap
+          sudo lxc exec smoke-test -- snap install --dangerous /root/zux-viz.snap
+          sudo lxc exec smoke-test -- zux-viz --help | grep -i usage
           sudo lxc delete --force smoke-test
         shell: bash
 
@@ -101,7 +101,7 @@ jobs:
         if: env.SNAPCRAFT_STORE_CREDENTIALS != ''
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          name: zux-amd64
+          name: zux-viz-amd64
 
       - name: Upload to stable channel
         if: env.SNAPCRAFT_STORE_CREDENTIALS != ''

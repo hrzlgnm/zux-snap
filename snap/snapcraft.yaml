@@ -1,7 +1,7 @@
 # Copyright 2026 hrzlgnm
 # SPDX-License-Identifier: MIT-0
 
-name: zux
+name: zux-viz
 base: core24
 adopt-info: zux
 title: zux
@@ -23,8 +23,8 @@ platforms:
   amd64:
 
 apps:
-  zux:
-    command: bin/zux
+  zux-viz:
+    command: bin/zux-viz
     extensions: [gnome]
     plugs:
       - network
@@ -84,21 +84,21 @@ parts:
         --custom-trusted-root "$SNAPCRAFT_PROJECT_DIR/trusted_root.jsonl" \
         --cert-identity "https://github.com/hrzlgnm/zux/.github/workflows/release.yml@refs/tags/${tag}"
 
-      install -Dm755 zux "$CRAFT_PART_INSTALL/bin/zux"
+      install -Dm755 zux "$CRAFT_PART_INSTALL/bin/zux-viz"
 
       install -d "$CRAFT_PART_INSTALL/meta/gui" \
           "$CRAFT_PART_INSTALL/share/man/man1"
       install -m644 src-tauri/icons/128x128.png \
           "$CRAFT_PART_INSTALL/meta/gui/icon.png"
       install -m644 docs/zux.1 \
-          "$CRAFT_PART_INSTALL/share/man/man1/zux.1"
+          "$CRAFT_PART_INSTALL/share/man/man1/zux-viz.1"
 
-      cat > "$CRAFT_PART_INSTALL/meta/gui/zux.desktop" <<EOF
+      cat > "$CRAFT_PART_INSTALL/meta/gui/zux-viz.desktop" <<EOF
       [Desktop Entry]
       Type=Application
       Name=zux
       Comment=mDNS-SD visualizer with force-directed graph
-      Exec=zux %U
+      Exec=zux-viz %U
       Icon=\${SNAP}/meta/gui/icon.png
       Categories=Network;Utility;
       Terminal=false
