@@ -4,11 +4,17 @@ Packages [zux](https://github.com/hrzlgnm/zux) as a Snap. This repository
 only contains packaging metadata and CI; no zux code lives here.
 
 The snap ships the prebuilt `zux_linux_x64` binary from the upstream GitHub
-release (the same artifact the AUR `-bin` package uses). Its sha256 is verified
-against the inline digest GitHub computes for every release asset. The release
-tag is pinned via `source-tag` in `snap/snapcraft.yaml`, which CI rewrites with
-the [pin-upstream-tag](.github/actions/pin-upstream-tag) action before building;
-the version is derived from the checked-out tag.
+release (the same artifact the AUR `-bin` package uses). The build verifies the
+binary's SLSA build provenance with `gh attestation verify` (offline bundle
+flow: the `fetch-attestation` step downloads the attestation bundle and Sigstore
+trusted root on the runner; `snap/snapcraft.yaml` verifies `--bundle
+--custom-trusted-root` offline, pinned to
+`release.yml@refs/tags/${tag}`). This proves the artifact was built by the
+upstream release workflow from the tagged source — not just that it matches
+GitHub's inline digest (which a compromised publish step could rewrite). The
+release tag is pinned via `source-tag` in `snap/snapcraft.yaml`, which CI
+rewrites with the [pin-upstream-tag](.github/actions/pin-upstream-tag) action
+before building; the version is derived from the checked-out tag.
 
 ## Install
 
