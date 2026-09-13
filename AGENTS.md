@@ -112,10 +112,7 @@ repackage prebuilt upstream binaries. Each now has its own `AGENTS.md`:
   cert pinned to `desktop-reusable.yml`, no `--source-digest`. Uses
   `pin-upstream-tag`.
 
-## Shared action
+## Snap build
 
-The actual `snapcraft pack` invocation lives in the shared
-`hrzlgnm/actions/.github/actions/build-snap` (referenced as `@v2.7.0` from
-`release.yml`). `v2.7.0` runs `sudo env GH_TOKEN="$GH_TOKEN" snapcraft pack
---use-lxd`; it does **not** inject a token (not needed with the offline
-bundle approach). `ci.yml` calls `snapcraft pack` directly instead.
+Both `ci.yml` and `release.yml` invoke `sudo snapcraft pack --use-lxd`
+directly instead of a shared action.
