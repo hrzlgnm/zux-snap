@@ -42,9 +42,8 @@ jobs:
           tag: ${{ inputs.tagName }}
 
       - name: Build snap
-        uses: hrzlgnm/actions/.github/actions/build-snap@49f43ae74193a73b2c1e1e066bf8f31a53b96a09 # v2.14.3
-        with:
-          verbosity: brief
+        run: sudo snapcraft pack --use-lxd --verbosity=brief
+        shell: bash
 
       - name: Upload snap artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
