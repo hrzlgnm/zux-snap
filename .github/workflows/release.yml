@@ -42,7 +42,7 @@ jobs:
           tag: ${{ inputs.tagName }}
 
       - name: Build snap
-        uses: hrzlgnm/actions/.github/actions/build-snap@0bc72278fc09aa8093f47c430e6e52cf9321e14b # v2.14.1
+        uses: hrzlgnm/actions/.github/actions/build-snap@49f43ae74193a73b2c1e1e066bf8f31a53b96a09 # v2.14.3
         with:
           verbosity: brief
 
