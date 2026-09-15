@@ -63,7 +63,7 @@ bundle="$(ls "$SNAPCRAFT_PROJECT_DIR"/sha256*.jsonl | head -1)"
   --repo hrzlgnm/zux \
   --bundle "$bundle" \
   --custom-trusted-root "$SNAPCRAFT_PROJECT_DIR/trusted_root.jsonl" \
-  --cert-identity "https://github.com/hrzlgnm/zux/.github/workflows/release.yml@refs/tags/${tag}"
+  --cert-identity "https://github.com/hrzlgnm/zux/.github/workflows/release.yml@refs/heads/main"
 ```
 
 - `core24`'s apt `gh` (2.45) predates the `attestation` subcommand, so the
@@ -73,7 +73,9 @@ bundle="$(ls "$SNAPCRAFT_PROJECT_DIR"/sha256*.jsonl | head -1)"
 - This is a **binary** attestation (over `zux_linux_x64`). Do **not** pass
   `--source-digest` here.
 - `cert-identity` pin:
-  `https://github.com/hrzlgnm/zux/.github/workflows/release.yml@refs/tags/${tag}`
+  `https://github.com/hrzlgnm/zux/.github/workflows/release.yml@refs/heads/main`
+  (upstream releases via release-please, so the workflow runs on `main` —
+  the tag is only created alongside, hence `@refs/heads/main`)
 
 ## CI structure
 

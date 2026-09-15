@@ -9,7 +9,8 @@ binary's SLSA build provenance with `gh attestation verify` (offline bundle
 flow: the `fetch-attestation` step downloads the attestation bundle and Sigstore
 trusted root on the runner; `snap/snapcraft.yaml` verifies `--bundle
 --custom-trusted-root` offline, pinned to
-`release.yml@refs/tags/${tag}`). This proves the artifact was built by the
+`release.yml@refs/heads/main` (upstream releases via release-please, so the
+workflow runs on `main`). This proves the artifact was built by the
 upstream release workflow from the tagged source — not just that it matches
 GitHub's inline digest (which a compromised publish step could rewrite). The
 release tag is pinned via `source-tag` in `snap/snapcraft.yaml`, which CI
