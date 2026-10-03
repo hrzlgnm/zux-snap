@@ -74,6 +74,7 @@ jobs:
           sudo lxc file push ./*.snap smoke-test/root/zux-viz.snap
           sudo lxc exec smoke-test -- snap install --dangerous /root/zux-viz.snap
           sudo lxc exec smoke-test -- zux-viz --help | grep -i usage
+          sudo lxc exec smoke-test -- zux --help | grep -i usage
           sudo lxc delete --force smoke-test
         shell: bash
 
