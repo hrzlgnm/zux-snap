@@ -25,6 +25,8 @@ Once published:
 sudo snap install zux-viz
 ```
 
+The snap provides the `zux-viz` command with a `zux` alias.
+
 ## Releasing
 
 1. Tag a release on `hrzlgnm/zux` (e.g. `v1.8.0`) and let its

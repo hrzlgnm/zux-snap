@@ -25,6 +25,7 @@ platforms:
 apps:
   zux-viz:
     command: bin/zux-viz
+    aliases: [zux]
     extensions: [gnome]
     plugs:
       - network
