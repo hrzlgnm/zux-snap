@@ -11,7 +11,28 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  # On main, we want all builds to complete even if merging happens faster to make it easier to discover at which point something broke.
+  group: ${{ github.ref == 'refs/heads/main' && format('ci-main-{0}', github.sha) || format('ci-{0}', github.ref) }}
+  cancel-in-progress: true
+
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      snap: ${{ steps.filter.outputs.snap }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        with:
+          filters: |
+            snap:
+              - '**'
+              - '!**.md'
+
   typos:
     name: 📝 Check typos
     if: always()
@@ -26,6 +47,8 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - actionlint
+      - changes
+    if: needs.changes.outputs.snap == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -56,3 +79,24 @@ jobs:
           name: zux-viz-amd64
           path: "*.snap"
           if-no-files-found: error
+
+  alls-green:
+    name: ✅ CI Status
+    runs-on: ubuntu-latest
+    needs:
+      - changes
+      - typos
+      - actionlint
+      - build
+    if: always()
+    steps:
+      - name: Check whether the needed jobs succeeded or failed
+        # No `# vN` comment: re-actors/alls-green publishes no versioned
+        # releases, so the SHA pin is the whole pin.
+        uses: re-actors/alls-green@a638d6464689bbb24c325bb3fe9404d63a913030
+        with:
+          jobs: ${{ toJSON(needs) }}
+          # Only `build` is gated by the `changes` outputs and may
+          # legitimately skip; the rest always run and must succeed.
+          allowed-skips: >-
+            build
