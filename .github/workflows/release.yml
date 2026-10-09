@@ -70,12 +70,16 @@ jobs:
         run: |
           set -euo pipefail
           sudo lxc launch ubuntu:24.04 smoke-test
+          trap 'sudo lxc delete --force smoke-test' EXIT
           sudo lxc exec smoke-test -- cloud-init status --wait
           sudo lxc file push ./*.snap smoke-test/root/zux-viz.snap
           sudo lxc exec smoke-test -- snap install --dangerous /root/zux-viz.snap
+          # Aliases are not auto-enabled for --dangerous installs (only for
+          # store installs), so enable the zux alias explicitly before testing it.
+          sudo lxc exec smoke-test -- snap alias zux-viz.zux-viz zux
+          sudo lxc exec smoke-test -- snap aliases
           sudo lxc exec smoke-test -- zux-viz --help | grep -i usage
           sudo lxc exec smoke-test -- zux --help | grep -i usage
-          sudo lxc delete --force smoke-test
         shell: bash
 
   publish:
