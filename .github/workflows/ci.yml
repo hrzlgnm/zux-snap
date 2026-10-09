@@ -12,6 +12,22 @@ permissions:
   contents: read
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      snap: ${{ steps.filter.outputs.snap }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        with:
+          filters: |
+            snap:
+              - '**'
+              - '!**.md'
+
   typos:
     name: 📝 Check typos
     if: always()
@@ -26,6 +42,8 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - actionlint
+      - changes
+    if: needs.changes.outputs.snap == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -56,3 +74,29 @@ jobs:
           name: zux-viz-amd64
           path: "*.snap"
           if-no-files-found: error
+
+  alls-green:
+    name: ✅ CI Status
+    runs-on: ubuntu-latest
+    needs:
+      - changes
+      - typos
+      - actionlint
+      - build
+    if: always()
+    steps:
+      - name: All required jobs passed or skipped
+        shell: bash
+        run: |
+          failed=0
+          for job in "changes:${{ needs.changes.result }}" "typos:${{ needs.typos.result }}" "actionlint:${{ needs.actionlint.result }}" "build:${{ needs.build.result }}"; do
+            case "${job##*:}" in
+              success|skipped)
+                ;;
+              *)
+                echo "::error::Job failed: ${job%%:*} (result: ${job##*:})"
+                failed=1
+                ;;
+            esac
+          done
+          exit "$failed"
