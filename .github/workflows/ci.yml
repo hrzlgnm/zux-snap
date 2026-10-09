@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   changes:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     outputs:
       snap: ${{ steps.filter.outputs.snap }}
     steps:
@@ -82,7 +82,7 @@ jobs:
 
   alls-green:
     name: ✅ CI Status
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     needs:
       - changes
       - typos
