@@ -1,3 +1,4 @@
+[![Release snap](https://github.com/hrzlgnm/zux-snap/actions/workflows/release.yml/badge.svg)](https://github.com/hrzlgnm/zux-snap/actions/workflows/release.yml)
 # zux snap
 
 Packages [zux](https://github.com/hrzlgnm/zux) as a Snap. This repository
