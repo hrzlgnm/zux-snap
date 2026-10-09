@@ -85,8 +85,8 @@ bundle="$(ls "$SNAPCRAFT_PROJECT_DIR"/sha256*.jsonl | head -1)"
   the verify** — nothing else needs to be triggered. Docs-only changes
   (`**.md`) skip the snap build via a `changes` (`dorny/paths-filter`) gate;
   `typos` and `actionlint` still run. The `alls-green` (`✅ CI Status`) job
-  passes when every job is `success` or `skipped`, so require that check —
-  not `build` — in branch protection.
+  uses `re-actors/alls-green` with `allowed-skips: build`, so require that
+  check — not `build` — in branch protection.
 - **`release.yml`** — `on: workflow_dispatch` only (input `tagName`). Builds,
   smoke-tests in an LXD container, then **publishes to the Snap Store stable
   channel**. The `publish` job is entirely gated behind the

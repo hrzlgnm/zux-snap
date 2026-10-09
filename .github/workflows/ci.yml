@@ -85,18 +85,13 @@ jobs:
       - build
     if: always()
     steps:
-      - name: All required jobs passed or skipped
-        shell: bash
-        run: |
-          failed=0
-          for job in "changes:${{ needs.changes.result }}" "typos:${{ needs.typos.result }}" "actionlint:${{ needs.actionlint.result }}" "build:${{ needs.build.result }}"; do
-            case "${job##*:}" in
-              success|skipped)
-                ;;
-              *)
-                echo "::error::Job failed: ${job%%:*} (result: ${job##*:})"
-                failed=1
-                ;;
-            esac
-          done
-          exit "$failed"
+      - name: Check whether the needed jobs succeeded or failed
+        # No `# vN` comment: re-actors/alls-green publishes no versioned
+        # releases, so the SHA pin is the whole pin.
+        uses: re-actors/alls-green@a638d6464689bbb24c325bb3fe9404d63a913030
+        with:
+          jobs: ${{ toJSON(needs) }}
+          # Only `build` is gated by the `changes` outputs and may
+          # legitimately skip; the rest always run and must succeed.
+          allowed-skips: >-
+            build
